@@ -100,7 +100,13 @@ class FPN(nn.Module):
 
     @auto_fp16()
     def forward(self, inputs):
+        #############################################
+        print("FPN forward funcation!" )
+        print("FPN inputs size:",len(inputs))
+        for i in range(len(inputs)):
+            print(inputs[i].size())
         assert len(inputs) == len(self.in_channels)
+        #############################################
 
         # build laterals
         laterals = [
@@ -138,4 +144,7 @@ class FPN(nn.Module):
                         outs.append(self.fpn_convs[i](F.relu(outs[-1])))
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
+        print("FPN output size:",len(outs))
+        for i in range(len(outs)):
+            print(outs[i].size())
         return tuple(outs)

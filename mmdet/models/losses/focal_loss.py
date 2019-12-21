@@ -16,7 +16,7 @@ def py_sigmoid_focal_loss(pred,
                           avg_factor=None):
     pred_sigmoid = pred.sigmoid()
     target = target.type_as(pred)
-    pt = (1 - pred_sigmoid) * target + pred_sigmoid * (1 - target)
+    pt = (1 - pred_sigmoid) * target + pred_sigmoid * (1 - target)## 获取目标存在，相应的预测概率
     focal_weight = (alpha * target + (1 - alpha) *
                     (1 - target)) * pt.pow(gamma)
     loss = F.binary_cross_entropy_with_logits(

@@ -10,8 +10,9 @@ from mmdet.apis import (get_root_logger, init_dist, set_random_seed,
                         train_detector)
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
-
-
+########  指定运行的GPU  #############
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+####################################
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
@@ -40,6 +41,8 @@ def parse_args():
         action='store_true',
         help='automatically scale lr with the number of gpus')
     args = parser.parse_args()
+
+    #####################  指定local_rank代表当前程序进程使用的GPU标号  ##########################
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
 
@@ -82,10 +85,13 @@ def main():
         logger.info('Set random seed to {}'.format(args.seed))
         set_random_seed(args.seed)
 
+    # model = build_detector(
+    #     cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)## 源码
     model = build_detector(
-        cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+        cfg.model, train_cfg=cfg.train_cfg, test_cfg=None)### 自改
 
     datasets = [build_dataset(cfg.data.train)]
+    print(datasets[0].CLASSES)
     if len(cfg.workflow) == 2:
         datasets.append(build_dataset(cfg.data.val))
     if cfg.checkpoint_config is not None:
@@ -96,7 +102,7 @@ def main():
             config=cfg.text,
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
-    model.CLASSES = datasets[0].CLASSES
+    model.CLASSES = datasets[0].CLASSES # 增加CLASSES属性方便可视化
     train_detector(
         model,
         datasets,

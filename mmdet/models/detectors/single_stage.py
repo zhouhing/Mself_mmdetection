@@ -21,6 +21,8 @@ class SingleStageDetector(BaseDetector):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
+        print("SingleStageDetector init funcation!")
+        print(backbone,'\n',neck,'\n',bbox_head,'\n',train_cfg,'\n',test_cfg)
         super(SingleStageDetector, self).__init__()
         self.backbone = builder.build_backbone(backbone)
         if neck is not None:
@@ -44,6 +46,7 @@ class SingleStageDetector(BaseDetector):
     def extract_feat(self, img):
         """Directly extract features from the backbone+neck
         """
+        print("SingleStageDetector extract_feat funcation!",)
         x = self.backbone(img)
         if self.with_neck:
             x = self.neck(x)
@@ -54,6 +57,7 @@ class SingleStageDetector(BaseDetector):
 
         See `mmedetection/tools/get_flops.py`
         """
+        print("SingleStageDetector foreard_dummy funcation!")
         x = self.extract_feat(img)
         outs = self.bbox_head(x)
         return outs
@@ -64,6 +68,7 @@ class SingleStageDetector(BaseDetector):
                       gt_bboxes,
                       gt_labels,
                       gt_bboxes_ignore=None):
+        print("SingleStageDetector forward_train funcation!")
         x = self.extract_feat(img)
         outs = self.bbox_head(x)
         loss_inputs = outs + (gt_bboxes, gt_labels, img_metas, self.train_cfg)
@@ -72,6 +77,7 @@ class SingleStageDetector(BaseDetector):
         return losses
 
     def simple_test(self, img, img_meta, rescale=False):
+        print("SingleStageDetector simple_test funcation!")
         x = self.extract_feat(img)
         outs = self.bbox_head(x)
         bbox_inputs = outs + (img_meta, self.test_cfg, rescale)

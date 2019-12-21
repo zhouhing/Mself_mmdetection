@@ -168,10 +168,14 @@ class Collect(object):
                  keys,
                  meta_keys=('filename', 'ori_shape', 'img_shape', 'pad_shape',
                             'scale_factor', 'flip', 'img_norm_cfg')):
+        # print("datasets piplines formating.py Collect init funcation!")
+        # print(keys)
         self.keys = keys
         self.meta_keys = meta_keys
 
     def __call__(self, results):
+        # print("datasets piplines formating.py Collect call funcation!")
+        # print(results)
         data = {}
         img_meta = {}
         for key in self.meta_keys:
@@ -182,5 +186,7 @@ class Collect(object):
         return data
 
     def __repr__(self):
+        # print("datasets piplines formating.py Collect repr funcation!")
+        # print(self)
         return self.__class__.__name__ + '(keys={}, meta_keys={})'.format(
             self.keys, self.meta_keys)

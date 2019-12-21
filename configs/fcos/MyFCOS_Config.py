@@ -1,6 +1,10 @@
+# -*-coding utf-8 -*-
+# @Time :2019/12/12 17:01
+# @Author : 50317
+# To become better
 # model settings
 model = dict(
-    type='FCOS',
+    type='MyFCOS',
     pretrained='open-mmlab://resnet50_caffe',
     backbone=dict(
         type='ResNet',
@@ -20,7 +24,7 @@ model = dict(
         num_outs=5,
         relu_before_extra_convs=True),
     bbox_head=dict(
-        type='FCOSHead',
+        type='MyMaskFCOSHead',
         num_classes=81,
         in_channels=256,
         stacked_convs=4,
@@ -53,8 +57,8 @@ test_cfg = dict(
     nms=dict(type='nms', iou_thr=0.5),
     max_per_img=100)
 # dataset settings
-dataset_type = 'CocoDataset'
-data_root = '/home/zhou/Myself_code/my_code/mmdetection/data/coco/'
+dataset_type = 'VOCDataset'
+data_root = '/home/zhou/Myself_code/DataSet/VOCdevkit/'
 img_norm_cfg = dict(
     mean=[102.9801, 115.9465, 122.7717], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
@@ -83,23 +87,46 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=4,
+    imgs_per_gpu=2, ## 作用是batchsize
     workers_per_gpu=4,
     train=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_train2017.json',
-        img_prefix=data_root + 'train2017/',
-        pipeline=train_pipeline),
+        type='RepeatDataset',
+        times=10,
+        dataset=dict(
+            type=dataset_type,
+            ann_file=[
+                data_root + 'VOC2007/ImageSets/Main/trainval.txt',
+                data_root + 'VOC2012/ImageSets/Main/trainval.txt'
+            ],
+            img_prefix=[data_root + 'VOC2007/', data_root + 'VOC2012/'],
+            pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        ann_file=data_root + 'VOC2007/ImageSets/Main/test.txt',
+        img_prefix=data_root + 'VOC2007/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        ann_file=data_root + 'VOC2007/ImageSets/Main/test.txt',
+        img_prefix=data_root + 'VOC2007/',
         pipeline=test_pipeline))
+    # train=dict(
+    #     type=dataset_type,
+    #     ann_file=data_root + 'annotations/instances_train2017.json',
+    #     img_prefix=data_root + 'train2017/',
+    #     pipeline=train_pipeline),
+    # val=dict(
+    #     type=dataset_type,
+    #     ann_file=data_root + 'annotations/instances_val2017.json',
+    #     img_prefix=data_root + 'val2017/',
+    #     pipeline=test_pipeline),
+    # test=dict(
+    #     type=dataset_type,
+    #     ann_file=data_root + 'annotations/instances_val2017.json',
+    #     img_prefix=data_root + 'val2017/',
+    #     pipeline=test_pipeline))
+
+
 # optimizer
 optimizer = dict(
     type='SGD',
@@ -128,7 +155,7 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/fcos_r50_caffe_fpn_gn_1x_4gpu'
+work_dir = './work_dirs/MyFCOS_Result'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

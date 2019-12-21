@@ -24,6 +24,7 @@ class CocoDataset(CustomDataset):
                'vase', 'scissors', 'teddy_bear', 'hair_drier', 'toothbrush')
 
     def load_annotations(self, ann_file):
+        # print("load_annotation funcation:",ann_file)
         self.coco = COCO(ann_file)
         self.cat_ids = self.coco.getCatIds()
         self.cat2label = {
@@ -35,25 +36,32 @@ class CocoDataset(CustomDataset):
         for i in self.img_ids:
             info = self.coco.loadImgs([i])[0]
             info['filename'] = info['file_name']
-            img_infos.append(info)
-        return img_infos
+            img_infos.append(info) ## 所有图片的信息
 
-    def get_ann_info(self, idx):
-        img_id = self.img_infos[idx]['id']
-        ann_ids = self.coco.getAnnIds(imgIds=[img_id])
-        ann_info = self.coco.loadAnns(ann_ids)
-        return self._parse_ann_info(self.img_infos[idx], ann_info)
+        # print("img_infos:",img_infos)
+        return img_infos
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small or without ground truths."""
+        # print("Filter too small and without ground truths images!")
         valid_inds = []
         ids_with_ann = set(_['image_id'] for _ in self.coco.anns.values())
         for i, img_info in enumerate(self.img_infos):
             if self.img_ids[i] not in ids_with_ann:
                 continue
             if min(img_info['width'], img_info['height']) >= min_size:
-                valid_inds.append(i)
+                valid_inds.append(i) ## 过滤无效的图片，保存有效的图片
+
+        # print("valid_inds:",valid_inds)
         return valid_inds
+
+    def get_ann_info(self, idx):
+        # print("get_ann_info funcation:",idx)
+        img_id = self.img_infos[idx]['id']
+        ann_ids = self.coco.getAnnIds(imgIds=[img_id])
+        ann_info = self.coco.loadAnns(ann_ids)
+        return self._parse_ann_info(self.img_infos[idx], ann_info)
+
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
@@ -67,6 +75,9 @@ class CocoDataset(CustomDataset):
                 labels, masks, seg_map. "masks" are raw annotations and not
                 decoded into binary masks.
         """
+        # print("_parse_ann_info funcation!")
+        # print("img_info:",img_info)
+        # print("ann_info:",ann_info)
         gt_bboxes = []
         gt_labels = []
         gt_bboxes_ignore = []
@@ -79,7 +90,7 @@ class CocoDataset(CustomDataset):
             if ann['area'] <= 0 or w < 1 or h < 1:
                 continue
             bbox = [x1, y1, x1 + w - 1, y1 + h - 1]
-            if ann.get('iscrowd', False):
+            if ann.get('iscrowd', False):## 存在则获得对应的值，不存在则返回False
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
@@ -106,5 +117,6 @@ class CocoDataset(CustomDataset):
             bboxes_ignore=gt_bboxes_ignore,
             masks=gt_masks_ann,
             seg_map=seg_map)
+        # print("ann:",ann)
 
         return ann

@@ -68,7 +68,7 @@ class CustomDataset(Dataset):
             self.proposals = None
         # filter images with no annotation during training
         if not test_mode:
-            valid_inds = self._filter_imgs()
+            valid_inds = self._filter_imgs() # 过滤无效的图片，（比如小于最小面积的图片），保存满足要求的图片
             self.img_infos = [self.img_infos[i] for i in valid_inds]
             if self.proposals is not None:
                 self.proposals = [self.proposals[i] for i in valid_inds]
@@ -107,6 +107,7 @@ class CustomDataset(Dataset):
 
     def _set_group_flag(self):
         """Set flag according to image aspect ratio.
+        # 根据图像宽高比设置标志
 
         Images with aspect ratio greater than 1 will be set as group 1,
         otherwise group 0.

@@ -520,6 +520,9 @@ class ResNet(nn.Module):
             raise TypeError('pretrained must be a str or None')
 
     def forward(self, x):
+
+        print("ResNet forward funcation!")
+        print("ResNet input size:",x.size())
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.relu(x)
@@ -530,6 +533,9 @@ class ResNet(nn.Module):
             x = res_layer(x)
             if i in self.out_indices:
                 outs.append(x)
+        print("ResNet forward out:",len(outs))
+        for i in range(len(outs)):
+            print(outs[i].size())
         return tuple(outs)
 
     def train(self, mode=True):
