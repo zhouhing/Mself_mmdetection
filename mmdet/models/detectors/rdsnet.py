@@ -97,7 +97,7 @@ class RDSNet(SingleStageDetector):
 
         losses_masks, final_masks, final_boxes = self.mask_head.loss(pred_masks, proposals['gt_bbox'],
                                                                      proposals['gt_mask'], img_metas, self.train_cfg)
-        losses.update(losses_masks)
+        losses.update(losses_masks) # 在字典中在添加losses_masks
 
         return losses
 

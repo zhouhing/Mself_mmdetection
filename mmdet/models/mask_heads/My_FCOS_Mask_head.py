@@ -9,7 +9,7 @@ from ..utils import ConvModule
 
 
 @HEADS.register_module
-class RdsMaskHead(nn.Module):
+class FCOSMaskHead(nn.Module):
     """Multi-level fused pixel head.
 
     level_3 -> 3x3 conv -> 2* -> 3x3 conv -> 2* -> 3x3 conv -> 2* -
@@ -27,13 +27,14 @@ class RdsMaskHead(nn.Module):
                  num_convs=0,
                  in_channels=256,
                  conv_out_channels=256,
-                 rep_channels=32,
+                 # rep_channels=32,
+                 rep_channels=81,
                  loss_weight=1,
                  conv_cfg=None,
                  norm_cfg=None,
                  crop_cfg=None):
         print("RdsMaskHead init funcation!")
-        super(RdsMaskHead, self).__init__()
+        super(FCOSMaskHead, self).__init__()
         self.num_ins = num_ins
         self.end_level = end_level
 
@@ -43,7 +44,7 @@ class RdsMaskHead(nn.Module):
             self.end_level = end_level
             assert end_level < self.num_ins
 
-        self.num_convs = num_convs
+        self.num_convs = num_convs ### 1
         self.in_channels = in_channels
         self.conv_out_channels = conv_out_channels
         self.rep_channels = rep_channels
@@ -97,7 +98,7 @@ class RdsMaskHead(nn.Module):
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
                 inplace=False))
-            final_conv.append(nn.UpsamplingBilinear2d(scale_factor=2))
+            final_conv.append(nn.UpsamplingBilinear2d(scale_factor=2)) # 扩大2倍
             self.final_convs.append(final_conv)
         self.conv_reps = nn.Conv2d(conv_out_channels, self.rep_channels, 1) # 1*1卷积保持特征图不变
 
@@ -119,16 +120,16 @@ class RdsMaskHead(nn.Module):
         for m in self.lateral_convs[0]:
             x = m(x)
 
-        for lateral_conv, feat in zip(self.lateral_convs[1:], feats[1:]):
+        for lateral_conv, feat in zip(self.lateral_convs[1:], feats[1:]):## feats[1:]逐步减半
             for m in lateral_conv:
                 feat = m(feat)
-            x += feat
+            x += feat # 将FPN各层进行多尺度特征融合
 
-        for i in range(self.num_convs):
+        for i in range(self.num_convs): # 1
             for m in self.final_convs[i]:
-                x = m(x)
+                x = m(x)  # 上采样，扩大两倍，回到原图大小
 
-        pixel_reps = self.conv_reps(x)
+        pixel_reps = self.conv_reps(x)## 对像素进行分类
         print("pixel_reps:",pixel_reps.size())
 
         pred_masks_list = []
@@ -305,6 +306,5 @@ class RdsMaskHead(nn.Module):
                 mask_pred = mask_pred * crop_mask.float()
             mask_pred_list.append(mask_pred)
         return mask_pred_list
-
 
 

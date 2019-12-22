@@ -59,7 +59,7 @@ class RdsnetHead(AnchorHead):
                                   self.num_anchors * self.cls_out_channels, 1)
         self.conv_reg = nn.Conv2d(self.feat_channels, self.num_anchors * 4, 1)
         self.conv_rep = nn.Conv2d(self.feat_channels,
-                                  self.num_anchors * self.rep_channels * 2, 1)
+                                  self.num_anchors * self.rep_channels * 2, 1)# 维持特征图的大小不变
 
     def init_weights(self):
         print('RdsnetHead init_weight funcation!')
@@ -203,10 +203,15 @@ class RdsnetHead(AnchorHead):
             cfg=cfg)
         # return pos entries for mask generator
         bs = cls_scores[0].size(0)
+
+        print("bs:",bs)
+
         cls_scores = [cls_score.permute(0, 2, 3, 1).reshape(bs, -1, self.cls_out_channels)
                       for cls_score in cls_scores]
         bbox_preds = [bbox_pred.permute(0, 2, 3, 1).reshape(bs, -1, 4) for bbox_pred in bbox_preds]
         obj_reps = [obj_rep.permute(0, 2, 3, 1).reshape(bs, -1, self.rep_channels*2) for obj_rep in obj_reps]
+        print("obj_reps:",obj_reps)
+
         cls_scores = torch.cat(cls_scores, 1)
         bbox_preds = torch.cat(bbox_preds, 1)
         obj_reps = torch.cat(obj_reps, 1)
