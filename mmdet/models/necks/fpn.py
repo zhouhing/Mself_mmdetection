@@ -92,19 +92,31 @@ class FPN(nn.Module):
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
+            ## TODO 为最后一层添加底层信息
+            in_cha=out_channels
+            out_cha=out_channels
+            self.last_dilation_layer=nn.Conv2d(in_cha,out_cha,kernel_size=3,padding=2,stride=2,dilation=2)
+
     # default init_weights for conv(msra) and norm in ConvModule
     def init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 xavier_init(m, distribution='uniform')
 
+    # def original_image(self, image):
+    #     print(image.size(),len(image))
+    #
+    #     pass
     @auto_fp16()
     def forward(self, inputs):
         #############################################
-        print("FPN forward funcation!" )
-        print("FPN inputs size:",len(inputs))
-        for i in range(len(inputs)):
-            print(inputs[i].size())
+        # print("FPN forward funcation!" )
+        # image=inputs[-1]
+        # inputs=inputs[:-1]
+        # print("FPN inputs size:",len(inputs))
+        # for i in range(len(inputs)):
+        #     print(inputs[i].size())
+        # self.original_image(image)
         assert len(inputs) == len(self.in_channels)
         #############################################
 
@@ -144,7 +156,15 @@ class FPN(nn.Module):
                         outs.append(self.fpn_convs[i](F.relu(outs[-1])))
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
-        print("FPN output size:",len(outs))
-        for i in range(len(outs)):
-            print(outs[i].size())
+        ## 给最顶上一层添加底层信息
+        last_out=outs[0]
+        for i in range(self.num_ins):
+            last_out=self.last_dilation_layer(last_out)
+        # print("last_out:",last_out.size(),last_out[0,0,0,:])
+        # print('out:',outs[-1][0,0,0,:])
+        outs[-1]=last_out+outs[-1]
+        # print('out:',outs[-1][0,0,0,:])
+        # print("FPN output size:",len(outs))
+        # for i in range(len(outs)):
+        #     print(outs[i].size())
         return tuple(outs)
